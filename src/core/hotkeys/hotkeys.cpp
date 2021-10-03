@@ -52,17 +52,23 @@ namespace Soundux
                     auto byte1 = message[1];
                     auto byte2 = message[2];
 
+                    if(std::getenv("SOUNDUX_DEBUG"))
+                        Fancy::fancy.logTime().message() << "Midi output: " 
+                        << std::to_string(byte0) << " | " 
+                        << std::to_string(byte1) << " | " 
+                        << std::to_string(byte2) << std::endl;
+
                     MidiKey key;
                     key.byte0 = byte0;
                     key.key = byte1;
                     key.byte2 = byte2;
                     key.type = Enums::KeyType::Midi;
 
-                    if (byte0 == 144)
+                    if (byte2 == 127)
                     {
                         onKeyDown(key);
                     }
-                    else if (byte0 == 128)
+                    else if (byte2 == 0)
                     {
                         onKeyUp(key);
                     }

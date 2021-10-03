@@ -1,4 +1,5 @@
 #include "queue.hpp"
+#include "fancy.hpp"
 
 namespace Soundux::Objects
 {
@@ -10,36 +11,36 @@ namespace Soundux::Objects
             cv.wait(lock, [&]() { return !queue.empty() || stop; });
             while (!queue.empty())
             {
-                auto front = queue.begin();
-                front->function();
-                queue.erase(front);
+                auto front = std::move(*queue.begin());
+
+                lock.unlock();
+                front.second();
+                lock.lock();
+
+                queue.erase(front.first);
             }
         }
     }
+
     void Queue::push_unique(std::uint64_t id, std::function<void()> function)
     {
         {
-            std::lock_guard lock(queueMutex);
-            if (std::find_if(queue.begin(), queue.end(),
-                             [&id](const auto &entry) { return entry.id && *entry.id == id; }) != queue.end())
-            {
+            if (queue.find(id) != queue.end()){
                 return;
             }
         }
 
         std::unique_lock lock(queueMutex);
-        queue.emplace_back(Call{std::move(function), id});
+        queue.emplace(id, std::move(function));
         lock.unlock();
 
         cv.notify_one();
     }
-    void Queue::push(std::function<void()> function)
-    {
-        std::unique_lock lock(queueMutex);
-        queue.emplace_back(Call{std::move(function), std::nullopt});
-        lock.unlock();
 
-        cv.notify_one();
+    void Queue::push(std::function<void()> function)
+    {   
+        function = function; // wow genius
+        Fancy::fancy.logTime().warning() << "Queue::push Temporarily disabled" << std::endl;
     }
 
     Queue::Queue()

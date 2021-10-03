@@ -13,14 +13,8 @@ namespace Soundux
     {
         class Queue
         {
-            struct Call
-            {
-                std::function<void()> function;
-                std::optional<std::uint64_t> id;
-            };
-
+            std::map<std::uint64_t, std::function<void()>> queue;
             std::mutex queueMutex;
-            std::vector<Call> queue;
 
             std::condition_variable cv;
             std::atomic<bool> stop;
